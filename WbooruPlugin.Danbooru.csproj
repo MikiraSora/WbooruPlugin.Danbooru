@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DanbooruGallery.cs" />
+    <Compile Include="DanbooruGalleryImageDetail.cs" />
     <Compile Include="DanbooruImageInfo.cs" />
     <Compile Include="DanbooruPluginInfo.cs" />
     <Compile Include="DanbooruSetting.cs" />

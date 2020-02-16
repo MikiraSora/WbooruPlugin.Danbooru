@@ -112,7 +112,7 @@ namespace WbooruPlugin.Danbooru
 
             image_info.GalleryItemID = x["id"].ToString();
 
-            image_info.ImageDetail = new GalleryImageDetail()
+            image_info.ImageDetail = new DanbooruGalleryImageDetail()
             {
                 ID = image_info.GalleryItemID,
                 CreateDate = x["created_at"].ToObject<DateTime>(),
@@ -121,6 +121,7 @@ namespace WbooruPlugin.Danbooru
                 Rate = x["rating"].ToString(),
                 Resolution = size,
                 Score = x["score"].ToString(),
+                PixivId = x["pixiv_id"].ToString(),
                 Source = x["source"].ToString(),
                 Tags = x["tag_string"].ToString().Split(' '),
                 DownloadableImageLinks = (new []

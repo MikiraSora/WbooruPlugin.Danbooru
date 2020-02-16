@@ -9,6 +9,6 @@ namespace WbooruPlugin.Danbooru
 {
     public class DanbooruImageInfo: GalleryItem
     {
-        public GalleryImageDetail ImageDetail { get; set; }
+        public DanbooruGalleryImageDetail ImageDetail { get; set; }
     }
 }
