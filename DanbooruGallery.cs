@@ -130,7 +130,7 @@ namespace WbooruPlugin.Danbooru
                     {
                         Description = "File",
                         DownloadLink = x["file_url"]?.ToString(),
-                        FileLength=0,
+                        FileLength=x["file_size"]?.ToObject<long>()??0,
                         FullFileName = WebUtility.UrlDecode(Path.GetFileName(x["file_url"]?.ToString()??string.Empty)),
                         Size = size
                     },
