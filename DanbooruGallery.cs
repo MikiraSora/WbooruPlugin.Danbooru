@@ -18,6 +18,7 @@ using Wbooru.Network;
 using Wbooru.Settings;
 using Wbooru.UI.Controls;
 using Wbooru.UI.Dialogs;
+using Wbooru.UI.Pages;
 using Wbooru.Utils;
 
 namespace WbooruPlugin.Danbooru
@@ -196,7 +197,7 @@ namespace WbooruPlugin.Danbooru
 
         #endregion
 
-        #region MyRegion
+        #region IGalleryNSFWFilter
 
         public IEnumerable<GalleryItem> NSFWFilter(IEnumerable<GalleryItem> items) => items.Where(x => NSFWFilter(x));
 
