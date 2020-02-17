@@ -12,16 +12,22 @@ using System.Text;
 using System.Threading.Tasks;
 using Wbooru;
 using Wbooru.Galleries;
+using Wbooru.Galleries.SupportFeatures;
 using Wbooru.Models.Gallery;
 using Wbooru.Network;
+using Wbooru.Settings;
+using Wbooru.UI.Controls;
+using Wbooru.UI.Dialogs;
 using Wbooru.Utils;
 
 namespace WbooruPlugin.Danbooru
 {
     [Export(typeof(Gallery))]
-    public class DanbooruGallery : Gallery
+    public class DanbooruGallery : Gallery , IGallerySearchImage
     {
         public override string GalleryName => "Danbooru";
+
+        #region Base
 
         public override GalleryItem GetImage(string id)
         {
@@ -52,16 +58,25 @@ namespace WbooruPlugin.Danbooru
             return GetImagesInternal();
         }
 
-        private IEnumerable<GalleryItem> GetImagesInternal(IEnumerable<string> keywords=null,int page=1)
+        private IEnumerable<GalleryItem> GetImagesInternal(IEnumerable<string> keywords = null, int page = 1)
         {
-            var base_url = $"https://danbooru.donmai.us/posts.json?limit=200";
+            var limit = Setting<GlobalSetting>.Current.GetPictureCountPerLoad;
+            var base_url = $"https://danbooru.donmai.us/posts.json?limit=200&";
 
             if (keywords?.Any() ?? false)
-                base_url = base_url + $"&tags={string.Join("+",keywords)}";
+            {
+                if (keywords.Count()>2)
+                {
+                    App.Current.Dispatcher.Invoke(()=>Dialog.ShowDialog("不支持超过2个标签的搜索.", "Danbooru标签搜索"));
+                    yield break;
+                }
+
+                base_url = base_url + $"tags={string.Join("+", keywords)}&";
+            } 
 
             while (true)
             {
-                JArray json;
+                JArray json = null;
 
                 try
                 {
@@ -155,5 +170,16 @@ namespace WbooruPlugin.Danbooru
 
             return image_info;
         }
+
+        #endregion
+
+        #region IGallerySearchImage
+
+        public IEnumerable<GalleryItem> SearchImages(IEnumerable<string> keywords)
+        {
+            return GetImagesInternal(keywords);
+        }
+
+        #endregion
     }
 }
