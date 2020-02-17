@@ -11,5 +11,6 @@ namespace WbooruPlugin.Danbooru
     [Export(typeof(SettingBase))]
     public class DanbooruSetting : SettingBase
     {
+        public bool QuestionableIsNSFW { get; internal set; }
     }
 }

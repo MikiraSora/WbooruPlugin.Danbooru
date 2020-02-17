@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using Wbooru.Models.Gallery;
 using Wbooru.Models.Gallery.Annotation;
 
@@ -21,6 +22,21 @@ namespace WbooruPlugin.Danbooru
             Process.Start(url);
 
             return true;
+        }
+
+        internal Rating RatingInternal => this.Rate.ToLower().FirstOrDefault() switch
+        {
+            'e' => Rating.Explicit,
+            's' => Rating.Safe,
+            'q' => Rating.Questionable,
+            _ => Rating.Questionable
+        };
+
+        internal enum Rating
+        {
+            Explicit = 0,
+            Safe = 1,
+            Questionable = 2
         }
     }
 }

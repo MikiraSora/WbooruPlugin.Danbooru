@@ -23,7 +23,7 @@ using Wbooru.Utils;
 namespace WbooruPlugin.Danbooru
 {
     [Export(typeof(Gallery))]
-    public class DanbooruGallery : Gallery , IGallerySearchImage
+    public class DanbooruGallery : Gallery , IGallerySearchImage , IGalleryItemIteratorFastSkipable,IGalleryNSFWFilter
     {
         public override string GalleryName => "Danbooru";
 
@@ -178,6 +178,45 @@ namespace WbooruPlugin.Danbooru
         public IEnumerable<GalleryItem> SearchImages(IEnumerable<string> keywords)
         {
             return GetImagesInternal(keywords);
+        }
+
+        #endregion
+
+        #region IGalleryItemIteratorFastSkipable
+
+        public IEnumerable<GalleryItem> IteratorSkip(int skip_count)
+        {
+            var limit_count = Setting<GlobalSetting>.Current.GetPictureCountPerLoad;
+
+            var page = skip_count / limit_count + 1;
+            skip_count = skip_count % Setting<GlobalSetting>.Current.GetPictureCountPerLoad;
+
+            return GetImagesInternal(null, page).Skip(skip_count);
+        }
+
+        #endregion
+
+        #region MyRegion
+
+        public IEnumerable<GalleryItem> NSFWFilter(IEnumerable<GalleryItem> items) => items.Where(x => NSFWFilter(x));
+
+        public bool NSFWFilter(GalleryItem item)
+        {
+            if (!SettingManager.LoadSetting<GlobalSetting>().EnableNSFWFileterMode)
+                return true;
+
+            if (item is DanbooruImageInfo pi)
+            {
+                if (pi.ImageDetail.RatingInternal == DanbooruGalleryImageDetail.Rating.Safe)
+                    return true;
+
+                if (pi.ImageDetail.RatingInternal == DanbooruGalleryImageDetail.Rating.Questionable && !Setting<DanbooruSetting>.Current.QuestionableIsNSFW)
+                    return true;
+
+                return false;
+            }
+
+            return false;
         }
 
         #endregion
