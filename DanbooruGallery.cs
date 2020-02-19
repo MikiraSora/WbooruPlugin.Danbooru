@@ -132,13 +132,13 @@ namespace WbooruPlugin.Danbooru
             {
                 ID = image_info.GalleryItemID,
                 CreateDate = x["created_at"].ToObject<DateTime>(),
-                Updater = x["uploader_name"].ToString(),
-                Author = x["tag_string_artist"].ToString(),
+                Updater = x["uploader_name"]?.ToString(),
+                Author = x["tag_string_artist"]?.ToString(),
                 Rate = x["rating"].ToString(),
                 Resolution = size,
                 Score = x["score"].ToString(),
-                PixivId = x["pixiv_id"].ToString(),
-                Source = x["source"].ToString(),
+                PixivId = x["pixiv_id"]?.ToString(),
+                Source = x["source"]?.ToString(),
                 Tags = x["tag_string"].ToString().Split(' '),
                 DownloadableImageLinks = (new []
                 {
