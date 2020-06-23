@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Wbooru;
 using Wbooru.Galleries;
 using Wbooru.Galleries.SupportFeatures;
+using Wbooru.Models;
 using Wbooru.Models.Gallery;
 using Wbooru.Network;
 using Wbooru.Settings;
@@ -121,7 +122,7 @@ namespace WbooruPlugin.Danbooru
             /*
              * Danbooru实际网站钦定网格150px正方形限制，可以快速推算
              */
-            var preview_size = width > height ? new Size(150, 150 * height / width) : new Size(150 * width / height, 150);
+            var preview_size = width > height ? new ImageSize(150, 150 * height / width) : new ImageSize(150 * width / height, 150);
 
             image_info.PreviewImageSize = preview_size;
             image_info.PreviewImageDownloadLink = x["preview_file_url"]?.ToString();
