@@ -108,11 +108,20 @@ namespace WbooruPlugin.Danbooru
             }
         }
 
+        private string generateUnstandardId(JToken x)
+        {
+            string a(JToken x) => x?.ToString() ?? "moemoe";
+            var buildStr = a(x["approver_id"]) + a(x["tag_string"]) + a(x["created_at"]);
+            return buildStr.CalculateMD5();
+        }
+
         private GalleryItem BuildItem(JToken x)
         {
             var image_info = new DanbooruImageInfo();
+            
+            var id = x["id"]?.ToString() ?? generateUnstandardId(x);
 
-            image_info.GalleryItemID = x["id"].ToString();
+            image_info.GalleryItemID = id;
             image_info.GalleryName = GalleryName;
 
             //var size = new Size(, );
@@ -127,7 +136,7 @@ namespace WbooruPlugin.Danbooru
             image_info.PreviewImageSize = preview_size;
             image_info.PreviewImageDownloadLink = x["preview_file_url"]?.ToString();
 
-            image_info.GalleryItemID = x["id"].ToString();
+            image_info.GalleryItemID = id;
 
             image_info.ImageDetail = new DanbooruGalleryImageDetail()
             {
