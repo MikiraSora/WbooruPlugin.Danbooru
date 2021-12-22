@@ -25,17 +25,17 @@ using Wbooru.Utils;
 namespace WbooruPlugin.Danbooru
 {
     [Export(typeof(Gallery))]
-    public class DanbooruGallery : Gallery , IGallerySearchImage , IGalleryItemIteratorFastSkipable,IGalleryNSFWFilter
+    public class DanbooruGallery : Gallery, IGallerySearchImage, IGalleryItemIteratorFastSkipable, IGalleryNSFWFilter
     {
         public override string GalleryName => "Danbooru";
 
         #region Base
 
-        public override GalleryItem GetImage(string id)
+        public override async Task<GalleryItem> GetImage(string id)
         {
             try
             {
-                return BuildItem(RequestHelper.GetJsonContainer<JObject>(RequestHelper.CreateDeafult($"https://danbooru.donmai.us/posts/{id}.json")));
+                return BuildItem(RequestHelper.GetJsonContainer<JObject>(await RequestHelper.CreateDeafultAsync($"https://danbooru.donmai.us/posts/{id}.json")));
             }
             catch (Exception e)
             {
@@ -44,7 +44,7 @@ namespace WbooruPlugin.Danbooru
             }
         }
 
-        public override GalleryImageDetail GetImageDetial(GalleryItem item)
+        public override async Task<GalleryImageDetail> GetImageDetial(GalleryItem item)
         {
             if (item is DanbooruImageInfo info)
                 return info.ImageDetail;
@@ -52,29 +52,29 @@ namespace WbooruPlugin.Danbooru
             if (item.GalleryName != GalleryName)
                 throw new Exception($"Can't get image detail with different {item.GalleryName} gallery item.");
 
-            return (GetImage(item.GalleryItemID) as DanbooruImageInfo)?.ImageDetail;
+            return (await GetImage(item.GalleryItemID) as DanbooruImageInfo)?.ImageDetail;
         }
 
-        public override IEnumerable<GalleryItem> GetMainPostedImages()
+        public override IAsyncEnumerable<GalleryItem> GetMainPostedImages()
         {
             return GetImagesInternal();
         }
 
-        private IEnumerable<GalleryItem> GetImagesInternal(IEnumerable<string> keywords = null, int page = 1)
+        private async IAsyncEnumerable<GalleryItem> GetImagesInternal(IEnumerable<string> keywords = null, int page = 1)
         {
             var limit = Setting<GlobalSetting>.Current.GetPictureCountPerLoad;
             var base_url = $"https://danbooru.donmai.us/posts.json?limit=200&";
 
             if (keywords?.Any() ?? false)
             {
-                if (keywords.Count()>2)
+                if (keywords.Count() > 2)
                 {
-                    App.Current.Dispatcher.Invoke(()=>Dialog.ShowDialog("不支持超过2个标签的搜索.", "Danbooru标签搜索"));
+                    await App.Current.Dispatcher.InvokeAsync(() => Dialog.ShowDialog("不支持超过2个标签的搜索.", "Danbooru标签搜索"));
                     yield break;
                 }
 
                 base_url = base_url + $"tags={string.Join("+", keywords)}&";
-            } 
+            }
 
             while (true)
             {
@@ -84,10 +84,10 @@ namespace WbooruPlugin.Danbooru
                 {
                     var actual_url = $"{base_url}page={page}";
 
-                    var response = RequestHelper.CreateDeafult(actual_url);
+                    var response = await RequestHelper.CreateDeafultAsync(actual_url);
                     using var reader = new StreamReader(response.GetResponseStream());
 
-                    json = JsonConvert.DeserializeObject(reader.ReadToEnd()) as JArray;
+                    json = JsonConvert.DeserializeObject(await reader.ReadToEndAsync()) as JArray;
 
                     if (json.Count == 0)
                         break;
@@ -118,7 +118,7 @@ namespace WbooruPlugin.Danbooru
         private GalleryItem BuildItem(JToken x)
         {
             var image_info = new DanbooruImageInfo();
-            
+
             var id = x["id"]?.ToString() ?? generateUnstandardId(x);
 
             image_info.GalleryItemID = id;
@@ -150,7 +150,7 @@ namespace WbooruPlugin.Danbooru
                 PixivId = x["pixiv_id"]?.ToString(),
                 Source = x["source"]?.ToString(),
                 Tags = x["tag_string"].ToString().Split(' '),
-                DownloadableImageLinks = (new []
+                DownloadableImageLinks = (new[]
                 {
                     new DownloadableImageLink()
                     {
@@ -168,7 +168,7 @@ namespace WbooruPlugin.Danbooru
                         FullFileName = WebUtility.UrlDecode(Path.GetFileName(x["large_file_url"]?.ToString()??string.Empty)),
                         Size = size
                     }
-                }).Where(x=>!string.IsNullOrWhiteSpace(x.DownloadLink)).ToArray()
+                }).Where(x => !string.IsNullOrWhiteSpace(x.DownloadLink)).ToArray()
             };
 
             image_info.DownloadFileName = $"{image_info.GalleryItemID} {string.Join(" ", image_info.ImageDetail.Tags)}";
@@ -186,7 +186,7 @@ namespace WbooruPlugin.Danbooru
 
         #region IGallerySearchImage
 
-        public IEnumerable<GalleryItem> SearchImages(IEnumerable<string> keywords)
+        public IAsyncEnumerable<GalleryItem> SearchImagesAsync(IEnumerable<string> keywords)
         {
             return GetImagesInternal(keywords);
         }
@@ -195,7 +195,7 @@ namespace WbooruPlugin.Danbooru
 
         #region IGalleryItemIteratorFastSkipable
 
-        public IEnumerable<GalleryItem> IteratorSkip(int skip_count)
+        public IAsyncEnumerable<GalleryItem> IteratorSkipAsync(int skip_count)
         {
             var limit_count = Setting<GlobalSetting>.Current.GetPictureCountPerLoad;
 
@@ -209,11 +209,11 @@ namespace WbooruPlugin.Danbooru
 
         #region IGalleryNSFWFilter
 
-        public IEnumerable<GalleryItem> NSFWFilter(IEnumerable<GalleryItem> items) => items.Where(x => NSFWFilter(x));
+        public IAsyncEnumerable<GalleryItem> NSFWFilter(IAsyncEnumerable<GalleryItem> items) => items.Where(x => NSFWFilter(x));
 
         public bool NSFWFilter(GalleryItem item)
         {
-            if (!SettingManager.LoadSetting<GlobalSetting>().EnableNSFWFileterMode)
+            if (!Setting<GlobalSetting>.Current.EnableNSFWFileterMode)
                 return true;
 
             if (item is DanbooruImageInfo pi)
